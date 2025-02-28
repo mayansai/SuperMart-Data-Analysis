@@ -1,0 +1,177 @@
+
+-------------------Table 11: This table presents the status of company level user type and ratio:------------------------
+
+select
+'new_customers' as user_type,
+new_customer as mtd_customers,
+(new_customer/MTD_customer)*100 as ratio
+from(select
+count(case when rnk=1 then customer_id end) as new_customer,
+count(case when rnk>1 then customer_id end ) as rept_customer,
+count(customer_id) as MTD_customer
+from(select 
+order_id,
+customer_id,
+order_date,
+rank() over(partition by customer_id order by order_date) as rnk
+from project7sept.super_mart1.order_details)x
+where order_date between '2024-10-01' and '2024-10-28')x
+union all
+select
+'rept_customers' as user_type,
+rept_customer as mtd_customers,
+(rept_customer/MTD_customer)*100 as ratio
+from(select
+count(case when rnk=1 then customer_id end) as new_customer,
+count(case when rnk>1 then customer_id end ) as rept_customer,
+count(customer_id) as MTD_customer
+from(select 
+order_id,
+customer_id,
+order_date,
+rank() over(partition by customer_id order by order_date) as rnk
+from project7sept.super_mart1.order_details)x
+where order_date between '2024-10-01' and '2024-10-28')x
+
+=-----------Table 12: This table presents the status of category level user type and ratio:-------------------------
+
+select 
+x.category as category,
+'new_customers' as user_type,
+new_customer as MTD_customers,
+round((new_customer/MTD_customer)*100,2) as ratio
+from(select
+x.category,
+count(case when rnk=1 then x.customer_id end) as new_customer,
+count(case when rnk>1 then x.customer_id end ) as rept_customer,
+count(x.customer_id) as MTD_customer
+from(select 
+od.order_id,
+od.customer_id,
+od.order_date,
+ph.category,
+rank() over(partition by ph.category,od.customer_id order by od.order_date) as rnk
+from project7sept.super_mart1.order_details as od
+join project7sept.super_mart1.product_hierarchy as ph
+on ph.product_id= od.product_id)x
+where order_date between '2024-10-01' and '2024-10-28'
+group by 1)x
+union all
+select 
+x.category as category,
+'rept_customers' as user_type,
+rept_customer as MTD_customers,
+round((rept_customer/MTD_customer)*100,2) as ratio
+from(select
+x.category,
+count(case when rnk=1 then x.customer_id end) as new_customer,
+count(case when rnk>1 then x.customer_id end ) as rept_customer,
+count(x.customer_id) as MTD_customer
+from(select 
+od.order_id,
+od.customer_id,
+od.order_date,
+ph.category,
+rank() over(partition by ph.category,od.customer_id order by od.order_date) as rnk
+from project7sept.super_mart1.order_details as od
+join project7sept.super_mart1.product_hierarchy as ph
+on ph.product_id= od.product_id)x
+where order_date between '2024-10-01' and '2024-10-28'
+group by 1)x
+order by 1
+
+--------------Table 13: This table presents the status company level retention % of unique customers---------------
+
+select
+SUBSTR(CAST(order_date as string),1,7) as month,
+count(unique_id) as unique_customers,
+count(case when order_date between '2023-09-01' and '2023-09-30' then unique_id end) as M1,
+count(case when order_date between '2023-10-01' and '2023-10-31' then unique_id end) as M2,
+count(case when order_date between '2023-11-01' and '2023-11-30' then unique_id end) as M3,
+count(case when order_date between '2023-12-01' and '2023-12-31' then unique_id end) as M4,
+count(case when order_date between '2024-01-01' and '2024-01-31' then unique_id end) as M5,
+count(case when order_date between '2024-02-01' and '2024-02-29' then unique_id end) as M6,
+count(case when order_date between '2024-03-01' and '2024-03-31' then unique_id end) as M7,
+count(case when order_date between '2024-04-01' and '2024-04-30' then unique_id end) as M8,
+count(case when order_date between '2024-05-01' and '2024-05-31' then unique_id end) as M9,
+count(case when order_date between '2024-06-01' and '2024-06-30' then unique_id end) as M10,
+count(case when order_date between '2024-07-01' and '2024-07-31' then unique_id end) as M11,
+count(case when order_date between '2024-08-01' and '2024-08-30' then unique_id end) as M12
+from (select
+distinct customer_id as unique_id,
+order_date, 
+customer_id
+from project7sept.super_mart1.order_details)
+where order_date between '2023-08-01' and '2024-06-30'
+group by 1
+order by 1 
+
+----------Table 14: This table presents the status company level retention % of new customers----
+
+select
+SUBSTR(CAST(order_date as string),1,7) as month,
+count(case when rank=1 then customer_id end)as new_customers,
+count(case when rank=1 and order_date between '2023-09-01' and '2023-09-30' then customer_id end) as M1,
+count(case when rank=1 and order_date between '2023-10-01' and '2023-10-31' then customer_id end) as M2,
+count(case when rank=1 and order_date between '2023-11-01' and '2023-11-30' then customer_id end) as M3,
+count(case when rank=1 and order_date between '2023-12-01' and '2023-12-31' then customer_id end) as M4,
+count(case when rank=1 and order_date between '2024-01-01' and '2024-01-31' then customer_id end) as M5,
+count(case when rank=1 and order_date between '2024-02-01' and '2024-02-29' then customer_id end) as M6,
+count(case when rank=1 and order_date between '2024-03-01' and '2024-03-31' then customer_id end) as M7,
+count(case when rank=1 and order_date between '2024-04-01' and '2024-04-30' then customer_id end) as M8,
+count(case when rank=1 and order_date between '2024-05-01' and '2024-05-31' then customer_id end) as M9,
+count(case when rank=1 and order_date between '2024-06-01' and '2024-06-30' then customer_id end) as M10,
+count(case when rank=1 and order_date between '2024-07-01' and '2024-07-31' then customer_id end) as M11,
+count(case when rank=1 and order_date between '2024-08-01' and '2024-08-30' then customer_id end) as M12
+from (select
+order_date, 
+customer_id,
+rank() over(partition by customer_id order by order_date) as rank
+from project7sept.super_mart1.order_details)
+where order_date between '2023-08-01' and '2024-06-30'
+group by 1
+order by 1
+-------------------Table 15: This table presents the status category level retention % of new customers/unique customers---
+
+select
+category,
+SUBSTR(CAST(order_date as string),1,7) as month,
+count(new_by_unique),
+count(case when order_date between '2023-09-01' and '2023-09-30' then new_by_unique end) as M1,
+count(case when order_date between '2023-10-01' and '2023-10-31' then new_by_unique end) as M2,
+count(case when order_date between '2023-11-01' and '2023-11-30' then new_by_unique end) as M3,
+count(case when order_date between '2023-12-01' and '2023-12-31' then new_by_unique end) as M4,
+count(case when order_date between '2024-01-01' and '2024-01-31' then new_by_unique end) as M5,
+count(case when order_date between '2024-02-01' and '2024-02-29' then new_by_unique end) as M6,
+count(case when order_date between '2024-03-01' and '2024-03-31' then new_by_unique end) as M7,
+count(case when order_date between '2024-04-01' and '2024-04-30' then new_by_unique end) as M8,
+count(case when order_date between '2024-05-01' and '2024-05-31' then new_by_unique end) as M9,
+count(case when order_date between '2024-06-01' and '2024-06-30' then new_by_unique end) as M10,
+count(case when order_date between '2024-07-01' and '2024-07-31' then new_by_unique end) as M11,
+count(case when order_date between '2024-08-01' and '2024-08-30' then new_by_unique end) as M12
+from(select
+count(new_customers/unique_customers) as new_by_unique,
+order_date,
+x.category
+from(select
+count(case when rank=1 then customer_id end)as new_customers,
+count(unique_id) as unique_customers,
+order_date,
+x.category
+from (select
+distinct customer_id as unique_id,
+order_date, 
+customer_id,
+ph.category,
+rank() over(partition by customer_id order by order_date) as rank
+from project7sept.super_mart1.order_details as od
+join project7sept.super_mart1.product_hierarchy as ph
+on od.product_id= ph.product_id)x
+group by 3,4)x
+group by 2,3)
+where order_date between '2023-08-01' and '2024-06-30'
+group by 1,2
+order by 1
+
+
+ ----------------------------finish-------------------xxxxxxxxxx-----------------------finish------------------------------------------------
